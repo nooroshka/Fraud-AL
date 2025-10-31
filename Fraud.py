@@ -55,9 +55,66 @@ class EntropySampler(BaseQueryStrategy):
         return np.argsort(-scores)[:batch_size]
 
 
-# TODO add FRaUD and FRaUD++ classes here
-# class FRaUDSampler(BaseQueryStrategy): ...
-# class FRaUDPlusSampler(BaseQueryStrategy): ...
+# ---------- NEW: a couple of connected samplers ----------
+
+class MarginSampler(BaseQueryStrategy):
+    """
+    Picks points with the smallest margin between the top-2 class probabilities.
+    A standard uncertainty baseline that complements entropy.
+    """
+    name = "margin"
+
+    def select(self, model, X_pool, batch_size, **kwargs):
+        probs = model.predict_proba(X_pool)  # shape [n, 2] for binary LR
+        margins = np.abs(probs[:, 1] - probs[:, 0])
+        return np.argsort(margins)[:batch_size]
+
+
+class CostBalancedEntropySampler(BaseQueryStrategy):
+    """
+    Weighs entropy by a simple expected cost model that prefers likely frauds.
+    """
+    name = "cost_balanced"
+
+    def __init__(self, fraud_cost: float = 100.0):
+        self.fraud_cost = fraud_cost
+
+    def select(self, model, X_pool, batch_size, **kwargs):
+        p1 = model.predict_proba(X_pool)[:, 1]
+        score = binary_entropy(p1) * (p1 * self.fraud_cost + (1.0 - p1))
+        return np.argsort(-score)[:batch_size]
+
+
+class FRaUDSampler(BaseQueryStrategy):
+    """
+    Lightweight FRaUD base (no schedules/diversity): combines
+    - Uncertainty (entropy)^alpha
+    - Focal minority emphasis with a prevalence prior
+    - Simple EGL proxy: ||x|| * p(1-p) on standardized features
+    """
+    name = "fraud"
+
+    def __init__(self, alpha: float = 1.0, gamma: float = 2.0, prior: float = 0.00172):
+        self.alpha = float(alpha)
+        self.gamma = float(gamma)
+        self.prior = float(prior)
+
+    def select(self, model, X_pool, batch_size, **kwargs):
+        p1 = model.predict_proba(X_pool)[:, 1]
+        # standardize once for EGL magnitude term
+        Xs = StandardScaler().fit_transform(X_pool)
+
+        # observed prevalence (if available) can override the default prior
+        y_labeled = kwargs.get("y_labeled")
+        obs_prev = float(y_labeled.mean()) if isinstance(y_labeled, np.ndarray) and y_labeled.size else 0.0
+        prior = max(self.prior, obs_prev, 1e-6)
+
+        unc = binary_entropy(p1) ** self.alpha
+        focal = (p1 / (prior + p1 + 1e-12)) ** self.gamma
+        egl = np.linalg.norm(Xs, axis=1) * p1 * (1.0 - p1)
+
+        s = unc * focal * egl
+        return np.argsort(-s)[:batch_size]
 
 
 # data loading
@@ -190,8 +247,14 @@ class ActiveLearner:
             abs_idx = pool_idx[rel]
             self.labeled_mask[abs_idx] = True
 
+            # NEW: cumulative frauds found in labeled set
+            frauds_found = int(self.y_train_full[self.labeled_mask].sum())
+
             out.append({"labels_used": int(self.labeled_mask.sum()), "auroc": auroc, "auprc": auprc})
-            print(f"round {len(out)} labels {out[-1]['labels_used']} auroc {auroc:.4f} auprc {auprc:.4f}")
+            print(
+                f"round {len(out)} labels {out[-1]['labels_used']} "
+                f"auroc {auroc:.4f} auprc {auprc:.4f} frauds_found {frauds_found}"
+            )
 
         df = pd.DataFrame(out)
         self.outdir.mkdir(parents=True, exist_ok=True)
@@ -221,8 +284,10 @@ def run_experiment(
     sampler_map = {
         "random": RandomSampler(seed),
         "entropy": EntropySampler(),
-        # "fraud": FRaUDSampler(...),           # TODO
-        # "fraudpp": FRaUDPlusSampler(...),     # TODO
+        "margin": MarginSampler(),                          # NEW
+        "cost_balanced": CostBalancedEntropySampler(),      # NEW
+        "fraud": FRaUDSampler(),                            # NEW (light FRaUD base)
+        # "fraudpp": FRaUDPlusSampler(...),                 # still TODO if/when you want
     }
     if strategy_name not in sampler_map:
         raise ValueError(f"unknown strategy {strategy_name}")
@@ -235,8 +300,12 @@ def run_experiment(
 
 def main():
     p = argparse.ArgumentParser(description="active learning fraud skeleton")
-    p.add_argument("--data", required=True, help="path to csv file")
-    p.add_argument("--strategy", default="entropy", choices=["random", "entropy"])
+    # REMOVED: --data argument
+    p.add_argument(
+        "--strategy",
+        default="entropy",
+        choices=["random", "entropy", "margin", "cost_balanced", "fraud"],
+    )
     p.add_argument("--outdir", default="results")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--batch-size", type=int, default=200)
@@ -244,8 +313,11 @@ def main():
     p.add_argument("--budget", type=int, default=5000)
     args = p.parse_args()
 
+    # Always use creditcard.csv next to this script
+    data_path = str(Path(__file__).with_name("creditcard.csv"))
+
     run_experiment(
-        data_path=args.data,
+        data_path=data_path,
         strategy_name=args.strategy,
         outdir=args.outdir,
         seed=args.seed,
