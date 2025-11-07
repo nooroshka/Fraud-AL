@@ -1,4 +1,3 @@
-# learner.py
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,21 +12,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, average_precision_score, brier_score_loss
 
-# Optional LightGBM
 try:
     from lightgbm import LGBMClassifier
     _HAS_LGBM = True
 except Exception:
     _HAS_LGBM = False
 
-# Project imports
 from utils import (
     set_seed, load_dataset_auto,
     recall_at_fpr, precision_at_fpr, ece_score
 )
 from config import load_config, ExperimentConfig
 
-# Strategies (FRaUD/FRaUD++ are optional; handled gracefully if missing)
 from strategies import (
     BaseQueryStrategy,
     RandomSampler, EntropySampler, MarginSampler, CostBalancedEntropySampler, QBCSampler
@@ -38,10 +34,7 @@ try:
 except Exception:
     _HAS_FRAUD = False
 
-
-# -----------------------------
-# Config
-# -----------------------------
+# Configurations
 @dataclass
 class ALConfig:
     batch_size: int = 200
@@ -52,9 +45,7 @@ class ALConfig:
     random_state: int = 0
 
 
-# -----------------------------
 # Wrapper to enforce DF inputs
-# -----------------------------
 class _DFCompatModel:
     """
     Wraps an sklearn/LGBM classifier so that predict_proba always receives
@@ -72,7 +63,6 @@ class _DFCompatModel:
             self._cols = [f"f{i}" for i in range(X.shape[1])]
             X = pd.DataFrame(X, columns=self._cols)
         else:
-            # DataFrame: remember exact columns
             self._cols = list(X.columns)
         out = self._m.fit(X, y)
         # mirror attributes like classes_ for downstream code
@@ -94,9 +84,6 @@ class _DFCompatModel:
         return getattr(self._m, name)
 
 
-# -----------------------------
-# Active Learner
-# -----------------------------
 class ActiveLearner:
     def __init__(self, X, y, cfg: ALConfig, sampler: BaseQueryStrategy, outdir: Path, run_name: str):
         self.cfg, self.sampler, self.outdir, self.run_name = cfg, sampler, outdir, run_name
@@ -136,7 +123,7 @@ class ActiveLearner:
         }
 
     def _build_model(self, y_labeled: pd.Series):
-        # Dynamic choice: allow LR bootstrap when positives are extremely scarce
+        # Allow LR bootstrap when positives are extremely scarce
         pos = int(y_labeled.sum())
         neg = int(len(y_labeled) - pos)
 
@@ -150,7 +137,7 @@ class ActiveLearner:
                 min_child_samples=5,       # help early tiny-positive rounds
                 feature_pre_filter=False,  # don't drop all features on tiny seeds
                 scale_pos_weight=spw,      # rebalance
-                verbosity=-1,              # suppress split spam; model still trains
+                verbosity=-1,              # suppress split spam, model still trains
                 n_jobs=-1,
             )
             return _DFCompatModel(base)
@@ -224,9 +211,7 @@ class ActiveLearner:
         pd.DataFrame(self.history).to_csv(out / f"{self.run_name}.metrics.csv", index=False)
 
 
-# -----------------------------
 # Runner helpers
-# -----------------------------
 def _make_sampler(name: str, seed: int) -> BaseQueryStrategy:
     name = name.lower()
     base_map: Dict[str, BaseQueryStrategy] = {
@@ -276,9 +261,7 @@ def run_experiment_from_cfg(cfg: ExperimentConfig) -> None:
             )
 
 
-# -----------------------------
 # CLI
-# -----------------------------
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=str, default="config.yaml",
