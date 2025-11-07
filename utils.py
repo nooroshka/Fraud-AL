@@ -1,4 +1,3 @@
-# utils.py
 from __future__ import annotations
 from pathlib import Path
 from typing import Tuple, List
@@ -18,6 +17,25 @@ def recall_at_fpr(y_true: np.ndarray, y_scores: np.ndarray, target_fpr: float = 
     if target_fpr <= fpr.max():
         return float(np.interp(target_fpr, fpr, tpr))
     return 0.0
+
+def precision_at_fpr(y_true: np.ndarray, y_scores: np.ndarray, target_fpr=0.001) -> Tuple[float, float]:
+    fpr, tpr, thr = roc_curve(y_true, y_scores)
+    if target_fpr > fpr.max(): return 0.0, 0.5
+    th = float(np.interp(target_fpr, fpr, thr))
+    y_pred = (y_scores >= th).astype(int)
+    tp = int(((y_pred==1)&(y_true==1)).sum()); fp = int(((y_pred==1)&(y_true==0)).sum())
+    return float(tp / max(1, tp + fp)), th
+
+def ece_score(y_true: np.ndarray, y_scores: np.ndarray, n_bins=15) -> float:
+    bins = np.linspace(0.0, 1.0, n_bins + 1)
+    idx = np.digitize(y_scores, bins) - 1
+    ece = 0.0
+    for b in range(n_bins):
+        m = (idx == b)
+        if not np.any(m): continue
+        conf = y_scores[m].mean(); acc = y_true[m].mean()
+        ece += (m.mean()) * abs(acc - conf)
+    return float(ece)
 
 def prepare_creditcard(df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, List[str], str]:
     if "Class" not in df.columns:
@@ -49,7 +67,7 @@ def prepare_paysim(df: pd.DataFrame, subsample_if_huge: bool = True) -> Tuple[np
     X[to_scale] = StandardScaler().fit_transform(X[to_scale])
     return X.values, y, list(X.columns), "paysim"
 
-def load_dataset_auto(path: str) -> Tuple[np.ndarray, np.ndarray, List[str], str]:
+def load_dataset_auto(path: str):
     df = pd.read_csv(path)
     if "Class" in df.columns: return prepare_creditcard(df)
     if "isFraud" in df.columns: return prepare_paysim(df)
