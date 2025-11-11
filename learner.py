@@ -29,12 +29,13 @@ from strategies import (
     RandomSampler, EntropySampler, MarginSampler, CostBalancedEntropySampler, QBCSampler
 )
 try:
-    from strategies import FRaUDConfig, FRaUDSampler, FRaUDPlusSampler  # type: ignore
+    from strategies import FRaUDConfig, FRaUDSampler, FRaUDPlusSampler
     _HAS_FRAUD = True
 except Exception:
     _HAS_FRAUD = False
 
-# Configurations
+
+# Config
 @dataclass
 class ALConfig:
     batch_size: int = 200
@@ -59,7 +60,7 @@ class _DFCompatModel:
 
     def fit(self, X, y):
         if isinstance(X, np.ndarray):
-            # if caller gave numpy, create generic column names
+            # Create generic column names in case of passing numpy
             self._cols = [f"f{i}" for i in range(X.shape[1])]
             X = pd.DataFrame(X, columns=self._cols)
         else:
@@ -84,6 +85,7 @@ class _DFCompatModel:
         return getattr(self._m, name)
 
 
+# Active Learner
 class ActiveLearner:
     def __init__(self, X, y, cfg: ALConfig, sampler: BaseQueryStrategy, outdir: Path, run_name: str):
         self.cfg, self.sampler, self.outdir, self.run_name = cfg, sampler, outdir, run_name
@@ -123,7 +125,7 @@ class ActiveLearner:
         }
 
     def _build_model(self, y_labeled: pd.Series):
-        # Allow LR bootstrap when positives are extremely scarce
+        # Dynamic choice: allow LR bootstrap when positives are extremely scarce
         pos = int(y_labeled.sum())
         neg = int(len(y_labeled) - pos)
 
@@ -137,7 +139,7 @@ class ActiveLearner:
                 min_child_samples=5,       # help early tiny-positive rounds
                 feature_pre_filter=False,  # don't drop all features on tiny seeds
                 scale_pos_weight=spw,      # rebalance
-                verbosity=-1,              # suppress split spam, model still trains
+                verbosity=-1,              # suppress split spam; model still trains
                 n_jobs=-1,
             )
             return _DFCompatModel(base)
@@ -210,7 +212,6 @@ class ActiveLearner:
 
         pd.DataFrame(self.history).to_csv(out / f"{self.run_name}.metrics.csv", index=False)
 
-
 # Runner helpers
 def _make_sampler(name: str, seed: int) -> BaseQueryStrategy:
     name = name.lower()
@@ -261,7 +262,6 @@ def run_experiment_from_cfg(cfg: ExperimentConfig) -> None:
             )
 
 
-# CLI
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=str, default="config.yaml",
@@ -281,7 +281,7 @@ def main():
         cfg = load_config(args.config)
         run_experiment_from_cfg(cfg)
     except Exception:
-        if args.data_path is None:
+        if args.data_path is None:s
             raise FileNotFoundError(
                 "Config load failed and --data_path not provided. "
                 "Provide a valid --config or pass flags for a single run."
