@@ -19,7 +19,7 @@
 <br>
 
 <p align="center">
-  <img src="httpsstatic://zG9jLTAyLWNsdWMtMDAwMDE3MDRjYzhkZmRiOTZiY2U1MjA3YjI2Yzg3ZTgtMTQzNzY0NDcwMzc1LTUxNTMwNDM4NjA5MDkyNDYwOTQ0/image_c10286.png?draw=true" alt="Project Overview" width="800">
+  <img src="https://github.com/nooroshka/Fraud-AL/raw/main/Gemini_Generated_Image_t6xb6kt6xb6kt6xb.png" alt="Project Overview" width="800">
 </p>
 
 # Overview
