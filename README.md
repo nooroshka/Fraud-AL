@@ -24,7 +24,7 @@
 
 # Overview
 
-Credit card fraud detection is a critical task, but it's plagued by extreme class imbalance. In our dataset of over 284,000 transactions, only 492 (0.17%) are fraudulent. This creates a massive problem for machine learning: models need labeled data, but labeling is expensive, and randomly selecting data for labeling is incredibly inefficient—you almost exclusively label legitimate transactions.
+Credit card fraud detection is a critical task, but it's plagued by extreme class imbalance. In our dataset of over 284,000 transactions, only 492 (0.17%) are fraudulent. This creates a massive problem for machine learning: models need labeled data, but labeling is expensive, and randomly selecting data for labeling is incredibly inefficient, you almost exclusively label legitimate transactions.
 
 This project tackles the problem of **label efficiency**. Instead of random sampling, we use **Active Learning (AL)** to intelligently select which transactions an expert should label next.
 
@@ -61,7 +61,7 @@ Credit card fraud detection poses a highly imbalanced classification challenge i
 # Repository Structure
 
 * **`learner.py`**: Main script to run a full Active Learning experiment.
-* **`strategies.py`**: Contains the core logic for all 9 AL sampling strategies, including our novel `GraphHybrid` method.
+* **`strategies.py`**: Contains the core logic for all AL sampling strategies, including our novel `GraphHybrid` method.
 * **`report_visualizations.py`**: Utility script to aggregate results and generate all plots/tables for the final report.
 * **`config.yaml`**: Main configuration file to set all experimental parameters (strategy, budget, etc.).
 * **`utils.py`**: Helper functions for metrics, diversity sampling, and plotting.
