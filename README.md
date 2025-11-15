@@ -19,7 +19,7 @@
 <br>
 
 <p align="center">
-  <img src="https://github.com/nooroshka/Fraud-AL/raw/main/meme.png" alt="Project Overview" width="800">
+  <img src="https://github.com/nooroshka/Fraud-AL/raw/main/meme.png" alt="Project Overview" width="500">
 </p>
 
 # Overview
