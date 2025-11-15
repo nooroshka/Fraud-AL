@@ -19,7 +19,7 @@
 <br>
 
 <p align="center">
-  <img src="https://github.com/nooroshka/Fraud-AL/raw/main/Gemini_Generated_Image_t6xb6kt6xb6kt6xb.png" alt="Project Overview" width="800">
+  <img src="https://github.com/nooroshka/Fraud-AL/raw/main/meme.png" alt="Project Overview" width="800">
 </p>
 
 # Overview
