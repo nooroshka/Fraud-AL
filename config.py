@@ -135,7 +135,7 @@ class ExperimentConfig:
 
 def load_config(path: str | Path) -> ExperimentConfig:
     """
-    Load configuration from YAML (preferred) or JSON.
+     Load configuration from YAML (preferred) or JSON.
 
     The loader is forgiving: if the file extension is missing or wrong, we'll
     try YAML first (if installed), then JSON.
