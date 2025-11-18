@@ -1,5 +1,5 @@
 """
-Query strategies for active learning.
+ Query strategies for active learning.
 
 This module implements several sampling strategies used during active learning,
 including FRaUD/FRaUD++ and a hybrid that mixes FRaUD++ with QBC (committee
