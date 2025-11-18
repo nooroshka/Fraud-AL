@@ -14,7 +14,7 @@ al:
   auroc_target: null             # Stop early if AUROC reaches this (null = disabled)
   lgbm_profile: "tuned"          # Options: "original" (lightweight), "tuned" (stronger)
   use_lgbm_early_stopping: true  # Enable early stopping with validation set (prevents overfitting)
-  # Optional extras (ignored by current code but harmless in config)
+  #  Optional extras (ignored by current code but harmless in config)
   add_unsup_features: ["iforest", "lof"]
   unsup_contamination: 0.004
   unsup_n_estimators: 200
