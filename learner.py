@@ -1,5 +1,5 @@
 """
-Active learning training loop and experiment runner.
+ Active learning training loop and experiment runner.
 
 This module wires together the dataset loader, query strategy (what to label next),
 and the model training loop. It tracks metrics round-by-round, saves quick plots,
