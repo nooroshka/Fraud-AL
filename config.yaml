@@ -1,8 +1,79 @@
-data_path: creditcard.csv
-outdir: results
-seeds: [0]
-strategies: [qbc]
-batch_size: 200
-seed_size: 1400
-budget: 5000
-model_kind: lgbm
+data_path: "creditcard.csv"
+strategy_name: "graph_hybrid"  # Options: random, entropy, margin, cost_balanced, qbc, fraud, fraudpp, fraudpp_hybrid,graph_hybrid
+outdir: "results_enhanced"
+seed: 0
+
+al:
+  batch_size: 400                # Number of samples to label per round
+  seed_size: 1400                # Initial labeled set size
+  seed_pos_frac: 0.06            # Fraction of positives in seed set (null = auto)
+  budget: 5000                   # Total labeling budget
+  test_size: 0.2                 # Fraction of data held out for testing
+  model_kind: "lgbm"             # Options: "lgbm", "lr" (logistic regression)
+  random_state: 0
+  auroc_target: null             # Stop early if AUROC reaches this (null = disabled)
+  lgbm_profile: "tuned"          # Options: "original" (lightweight), "tuned" (stronger)
+  use_lgbm_early_stopping: true  # Enable early stopping with validation set (prevents overfitting)
+  # Optional extras (ignored by current code but harmless in config)
+  add_unsup_features: ["iforest", "lof"]
+  unsup_contamination: 0.004
+  unsup_n_estimators: 200
+  lof_n_neighbors: 25
+
+fraud:
+  # Core FRaUD parameters (TUNED - Phase 4, tune_006: AUROC 0.9724)
+  alpha: 1.2                     # Entropy exponent (tuned: 1.0 → 1.2 for better uncertainty focus)
+  gamma: 2.5                     # Focal weight exponent (tuned: 2.0 → 2.5 for stronger prior influence)
+  prior: 0.00172                 # Expected fraud rate (null = use observed rate)
+
+  # Diversity selection (TUNED)
+  diversity_metric: "euclidean"  # Options: "euclidean", "cosine", "manhattan", "chebyshev"
+  diversity_mode: "probability_weighted"  # TUNED: "hybrid" → "probability_weighted" (better performance)
+  embed_max_dim: 32              # Max PCA dimensions for diversity computation
+
+  # Exploration vs Exploitation (TUNED - Best Balance Configuration)
+  quota: 0.25                    # Base fraction of batch for exploitation (used when schedules disabled)
+  lambda_anomaly: 0.5            # Rarity boost weight (used when schedules disabled)
+  use_schedules: true            # Enable dynamic quota/lambda scheduling across rounds
+
+  # Schedule configuration (TUNED - Smooth mode is proven best)
+  schedule_mode: "smooth"        # TUNED: "performance" → "smooth" (+1.6% AUROC improvement!)
+  smooth_transition_rounds: 2    # Rounds to blend between phases (for smooth mode)
+  adaptive_thresholds: [0.15, 0.35, 0.60]  # Budget fractions for phase transitions (adaptive)
+  performance_auroc_threshold: 0.85  # Switch to exploitation when AUROC reached (performance)
+
+  rarity_k: 10                   # Number of nearest neighbors for rarity computation
+  exploit_topk_factor: 8.0       # Top-k multiplier for exploitation candidates
+  explore_topk_factor: 10.0      # Top-k multiplier for exploration candidates
+
+  # Model configuration
+  random_state: 0
+  use_calibration: false         # Enable probability calibration (sigmoid)
+
+  # Operating point and Threshold-Adaptive Boundary Proximity (TABP) - TUNED
+  target_fpr: 0.001              # Target false positive rate (0.001 = 0.1%)
+  tabp_weight: 0.8               # TUNED: 1.0 → 0.8 (slightly lower for better balance)
+  tabp_ramp: true                # Gradually increase TABP weight across rounds
+  tabp_kind: "inverse"           # CONFIRMED BEST: "inverse" outperforms gaussian/hinge
+  tabp_margin: 0.03              # TUNED: 0.05 → 0.03 (tighter margin)
+  tabp_temperature: 0.1          # Temperature for gaussian TABP (spread control)
+
+  # Hybrid strategy (FRaUD++ + QBC)
+  qbc_weight: 0.5                # TUNED: 0.2 → 0.5 (higher for Graph-FRaUD Hybrid synergy)
+
+  # Dynamic scheduling (TUNED - Aggressive exploration for best balance)
+  # These are the optimal values from Phase 4, tune_006
+  quota_early: 0.05              # TUNED: 0.70 → 0.05 (much more exploration early!)
+  quota_mid: 0.15                # TUNED: 0.40 → 0.15 (continued exploration)
+  quota_late: 0.25               # TUNED: 0.35 → 0.25 (still exploring late)
+  lam_early: 0.75                # TUNED: 0.20 → 0.75 (high rarity boost early)
+  lam_mid: 0.55                  # TUNED: 0.35 → 0.55 (increased novelty seeking)
+  lam_late: 0.35                 # TUNED: 0.35 → 0.35 (maintained)
+
+  # Graph-FRaUD Hybrid parameters (for graph_hybrid strategy)
+  # These parameters control graph-based cluster reasoning for fraud detection
+  graph_k_neighbors: 10          # Number of neighbors in k-NN graph (5-20 recommended)
+  graph_hub_weight: 0.5          # Weight for hub score - identifies cluster centers (0-1)
+  graph_bridge_weight: 0.5       # Weight for bridge score - identifies boundary connectors (0-1)
+  graph_topk_factor: 10          # Build graph over top (factor × batch_size) candidates (5-15)
+
