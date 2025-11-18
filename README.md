@@ -11,7 +11,7 @@
 <br>
 <br>
     <a href="https://github.com/nooroshka/Fraud-AL">GitHub Repository</a> |
-    <a href="https://github.com/nooroshka/Fraud-AL/blob/main/123456789_987654321_112233445_556677889.pdf">Final Report</a> |
+    <a href="https://github.com/nooroshka/Fraud-AL/blob/main/Report_AL.pdf.pdf">Final Report</a> |
     <a href="#video-link-tbd">Video Presentation (TBD)</a>
 </p>
 
