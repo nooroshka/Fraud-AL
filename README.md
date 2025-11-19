@@ -12,7 +12,7 @@
 <br>
     <a href="https://github.com/nooroshka/Fraud-AL">GitHub Repository</a> |
     <a href="https://github.com/nooroshka/CSI-Fraud/blob/main/our_paper_CSI-Fraud.pdf">Final Report</a> |
-    <a href="https://www.youtube.com/watch?v=K50OEODrgUY">Video Presentation (TBD)</a>
+    <a href="https://www.youtube.com/watch?v=K50OEODrgUY">Video Presentation</a>
 </p>
 
 <br>
