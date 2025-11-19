@@ -81,7 +81,7 @@ Credit card fraud detection poses a highly imbalanced classification challenge i
 * **`utils.py`**: Helper functions for metrics, diversity sampling, and plotting.
 * **`config.py`**: Loads the `.yaml` config into Python objects.
 * **`creditcard.csv`**: The Kaggle dataset used for the project.
-* **`results/` (Generated)**: Raw output folder for per-run metrics and plots.
+* **`results_enhanced/` (Generated)**: Raw output folder for per-run metrics and plots.
 * **`results_report/` (Generated)**: Final output folder for aggregated report-ready figures and tables.
 * **`Fraud++_Paper.pdf`**: The final project report.
 
