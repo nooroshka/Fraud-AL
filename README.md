@@ -39,9 +39,9 @@ Credit card fraud detection poses a highly imbalanced classification challenge i
 # How to Run
 
 1.  **Install dependencies:**
-    ```bash
-    pip install numpy pandas scikit-learn lightgbm matplotlib seaborn pyyaml
-    ```
+    Ensure you have Python 3.8+ installed, then run:
+    bash
+    ```pip install -r requirements.txt```
 
 2.  **Dataset Setup:**
     Download the dataset from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) and place the `creditcard.csv` file in the **root folder** of the project.  
