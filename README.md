@@ -40,8 +40,9 @@ Credit card fraud detection poses a highly imbalanced classification challenge i
 
 1.  **Install dependencies:**
     Ensure you have Python 3.8+ installed, then run:
-    bash
-    ```pip install -r requirements.txt```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 2.  **Dataset Setup:**
     Download the dataset from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) and place the `creditcard.csv` file in the **root folder** of the project.  
@@ -57,33 +58,48 @@ Credit card fraud detection poses a highly imbalanced classification challenge i
         ```bash
         python autorun_report.py --full
         ```
-
+        
     * **Option B: Single Experiment**  
         Edit `config.yaml` to choose your desired `strategy_name` and other parameters.
         ```bash
         python learner.py --config config.yaml
         ```
-    Raw results will be saved in the `results/` folder.
+      
+    Raw results will be saved in the `results_enhanced/` folder.
 
 4.  **Generate report plots:**
-    After running your experiments (if you didn't use the automated script), aggregate the results:
+    If you ran `python autorun_report.py --full`, the standard figures and tables
+    are **already** in `results_report/`, and you don't need this step.
+
+    You can use `report_visualizations.py` to (re)generate or customize the report
+    from any existing results:
+
     ```bash
+    # Regenerate plots/tables from results/ (e.g., after autorun_report)
     python report_visualizations.py
+    
+    # Or, if you only used learner.py with outdir set to results_enhanced/
+    python report_visualizations.py --results_dir results_enhanced
     ```
-    This reads the `results/` folder and saves the final comparison plots and tables to `results_report/`.
+    Both commands write the aggregated plots and tables to the `results_report/`
+    folder (or to the directory you pass via `--out_dir`).
 
 # Repository Structure
-* **`autorun_report.py`**: Master script to run the full experiment suite and generate the report.
+* **`autorun_report.py`**: Master script to run the full experiment suite and generate the report. (runs experiments into `results/`, then writes aggregated figures/tables to `results_report/`).
 * **`learner.py`**: Main script to run a single Active Learning experiment.
 * **`strategies.py`**: Contains the core logic for all AL sampling strategies, including our novel `GraphHybrid` method.
-* **`report_visualizations.py`**: Utility script to aggregate results and generate all plots/tables for the final report.
+* **`report_visualizations.py`**: Utility script to aggregate results (from `results/` or `results_enhanced/`) and generate all plots/tables for the final report.
 * **`config.yaml`**: Main configuration file to set all experimental parameters (strategy, budget, etc.).
 * **`utils.py`**: Helper functions for metrics, diversity sampling, and plotting.
 * **`config.py`**: Loads the `.yaml` config into Python objects.
 * **`creditcard.csv`**: The Kaggle dataset used for the project.
-* **`results_enhanced/` (Generated)**: Raw output folder for per-run metrics and plots.
+* **`results/` (Generated)**: Raw output folder for per-run metrics and plots when using
+  `autorun_report.py` with default settings.
+* **`results_enhanced/` (Generated)**: Raw output folder for per-run metrics and plots when running
+  `learner.py --config config.yaml` (default `outdir` in the config).
 * **`results_report/` (Generated)**: Final output folder for aggregated report-ready figures and tables.
-* **`Fraud++_Paper.pdf`**: The final project report.
+
+* **`our_paper_CSI-Fraud.pdf`**: The final project report.
 
 # Acknowledgment
 This project was developed as the final submission for the **Data Analysis and Presentation Lab (096260)** at the Technion - Israel Institute of Technology.
